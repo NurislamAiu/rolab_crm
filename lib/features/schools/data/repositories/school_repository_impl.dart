@@ -4,6 +4,7 @@ import '../../../../core/error/failure.dart';
 import '../../domain/entities/school.dart';
 import '../../domain/repositories/school_repository.dart';
 import '../datasources/school_firebase_datasource.dart';
+import '../models/school_model.dart';
 
 class SchoolRepositoryImpl implements SchoolRepository {
   final SchoolFirebaseDataSource remoteDataSource;
@@ -11,22 +12,19 @@ class SchoolRepositoryImpl implements SchoolRepository {
   SchoolRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Stream<Either<Failure, List<School>>> getSchools() {
-    return remoteDataSource.getSchools().map((schools) {
-      // Здесь SchoolModel автоматически является School (из-за extends),
-      // поэтому явный маппинг не нужен. Возвращаем успешный результат.
-      return Right<Failure, List<School>>(schools);
-    }).handleError((error) {
-      // Возвращаем ошибку в виде Failure
-      return Left<Failure, List<School>>(ServerFailure());
-    });
+  Future<Either<Failure, Stream<List<School>>>> getSchools() async {
+    try {
+      final stream = remoteDataSource.getSchools();
+      // Оборачиваем успешный стрим в Right
+      return Right(stream);
+    } on ServerException {
+      return Left(ServerFailure());
+    }
   }
 
   @override
   Future<Either<Failure, void>> addSchool(School school) async {
     try {
-      // Мы не можем напрямую передать School, т.к. там нет toFirestore.
-      // Поэтому нужно создать SchoolModel.
       final schoolModel = SchoolModel(
         id: school.id,
         name: school.name,

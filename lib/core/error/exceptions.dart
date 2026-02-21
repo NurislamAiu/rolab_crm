@@ -1,1 +1,3 @@
-// Кастомные исключения (e.g., ServerException)
+class ServerException implements Exception {}
+
+class CacheException implements Exception {}

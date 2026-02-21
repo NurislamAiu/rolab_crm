@@ -2,15 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/school_model.dart';
 
-// Абстрактный класс определяет контракт для источника данных
 abstract class SchoolFirebaseDataSource {
   Stream<List<SchoolModel>> getSchools();
   Future<void> addSchool(SchoolModel school);
-  Future<void> updateSchool(SchoolModel school);
+  Future<void> updateSchool(SchoolModel school); // <--- Добавил этот метод
 }
 
-
-// Реализация, использующая Firebase
 class SchoolFirebaseDataSourceImpl implements SchoolFirebaseDataSource {
   final FirebaseFirestore firestore;
 
@@ -19,11 +16,13 @@ class SchoolFirebaseDataSourceImpl implements SchoolFirebaseDataSource {
   @override
   Stream<List<SchoolModel>> getSchools() {
     try {
-      return firestore.collection('schools').snapshots().map((snapshot) {
-        return snapshot.docs.map((doc) => SchoolModel.fromFirestore(doc)).toList();
-      });
+      return firestore.collection('schools')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) => SchoolModel.fromFirestore(doc)).toList();
+        });
     } catch (e) {
-      // В реальном приложении здесь лучше логировать ошибку
       throw ServerException();
     }
   }
@@ -36,7 +35,8 @@ class SchoolFirebaseDataSourceImpl implements SchoolFirebaseDataSource {
       throw ServerException();
     }
   }
-  
+
+  // <--- И реализовал его
   @override
   Future<void> updateSchool(SchoolModel school) async {
     try {
