@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/usecases/usecase.dart'; // <--- ДОБАВЛЕН ЭТОТ ИМПОРТ
+import '../../../../core/usecases/usecase.dart'; 
+import '../../../activities/domain/entities/activity.dart';
+import '../../../activities/domain/usecases/log_activity_usecase.dart';
+import '../../../activities/presentation/providers/activity_providers.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
@@ -11,6 +14,7 @@ final authStateNotifierProvider = StateNotifierProvider<AuthStateNotifier, AuthS
     ref.watch(loginUseCaseProvider),
     ref.watch(logoutUseCaseProvider),
     ref.watch(getCurrentUserUseCaseProvider),
+    ref.watch(logActivityUseCaseProvider),
   );
 });
 
@@ -18,11 +22,13 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
   final GetCurrentUserUseCase _getCurrentUserUseCase;
+  final LogActivityUseCase _logActivityUseCase;
 
   AuthStateNotifier(
     this._loginUseCase,
     this._logoutUseCase,
     this._getCurrentUserUseCase,
+    this._logActivityUseCase,
   ) : super(AuthInitial()) {
     checkAuthStatus();
   }
@@ -41,7 +47,19 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     final result = await _loginUseCase(LoginParams(email: email, password: password));
     result.fold(
       (failure) => state = AuthError(failure.message ?? "Ошибка входа"),
-      (user) => state = Authenticated(user),
+      (user) {
+        state = Authenticated(user);
+        
+        // --- ЛОГИРУЕМ АКТИВНОСТЬ: ВХОД В СИСТЕМУ ---
+        _logActivityUseCase(ActivityLog(
+          id: '',
+          type: 'login',
+          title: 'Вход в систему',
+          description: 'Пользователь ${user.fullName} успешно авторизовался',
+          userName: user.fullName,
+          createdAt: DateTime.now(),
+        ));
+      },
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:rolab_crm/core/error/failure.dart';
 import 'package:rolab_crm/features/dashboard/domain/entities/dashboard_metrics.dart';
@@ -6,32 +7,43 @@ import 'package:rolab_crm/features/schools/domain/repositories/school_repository
 
 class DashboardRepositoryImpl implements DashboardRepository {
   final SchoolRepository schoolRepository;
+  final FirebaseFirestore firestore;
 
-  DashboardRepositoryImpl({required this.schoolRepository});
+  DashboardRepositoryImpl({
+    required this.schoolRepository,
+    required this.firestore,
+  });
 
   @override
   Future<Either<Failure, DashboardMetrics>> getDashboardMetrics() async {
-    // 1. Сначала получаем результат от репозитория школ
-    final schoolsEither = await schoolRepository.getSchools();
-
-    // 2. Обрабатываем результат. Fold вернет Future, так как правая часть - async
-    return schoolsEither.fold(
-      // 2a. Если была ошибка, просто оборачиваем ее в Future и возвращаем
-      (failure) async => Left(failure),
+    try {
+      // 1. Сначала получаем школы
+      final schoolsEither = await schoolRepository.getSchools();
       
-      // 2b. Если получили стрим, работаем с ним асинхронно
-      (schoolsStream) async {
-        try {
-          // Берем первое (актуальное) значение из стрима
+      int schoolCount = 0;
+      await schoolsEither.fold(
+        (failure) async {
+          // Игнорируем или пробрасываем
+        },
+        (schoolsStream) async {
           final schools = await schoolsStream.first;
-          final metrics = DashboardMetrics(schoolCount: schools.length);
-          // Возвращаем успешный результат
-          return Right(metrics);
-        } catch (e) {
-          // Если произошла ошибка при чтении стрима
-          return Left(ServerFailure(message: "Ошибка при чтении данных о школах"));
-        }
-      },
-    );
+          schoolCount = schools.length;
+        },
+      );
+
+      // 2. Получаем общее количество студентов напрямую из Firestore
+      // Так как агрегация Count — это бесплатная/очень дешевая операция в Firestore
+      final studentsQuery = await firestore.collection('students').count().get();
+      final studentCount = studentsQuery.count ?? 0;
+
+      final metrics = DashboardMetrics(
+        schoolCount: schoolCount,
+        studentCount: studentCount,
+      );
+
+      return Right(metrics);
+    } catch (e) {
+      return const Left(ServerFailure(message: "Ошибка при получении метрик дашборда"));
+    }
   }
 }

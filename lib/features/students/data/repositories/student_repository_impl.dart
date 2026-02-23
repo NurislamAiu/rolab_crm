@@ -32,7 +32,9 @@ class StudentRepositoryImpl implements StudentRepository {
           parentFullName: student.parentFullName,
           parentPhoneNumber: student.parentPhoneNumber,
           createdAt: student.createdAt,
-          groupId: student.groupId
+          groupId: student.groupId,
+          iin: student.iin, // <-- Добавлен ИИН
+          className: student.className // <-- Добавлен Класс
       );
       await dataSource.addStudent(studentModel);
       return const Right(null);

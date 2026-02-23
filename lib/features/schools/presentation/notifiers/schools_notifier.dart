@@ -1,25 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rolab_crm/core/usecases/usecase.dart';
 import 'package:rolab_crm/features/auth/domain/entities/app_user.dart';
+import '../../../activities/domain/entities/activity.dart';
+import '../../../activities/domain/usecases/log_activity_usecase.dart';
+import '../../../activities/presentation/providers/activity_providers.dart';
 import '../../domain/usecases/add_school_usecase.dart';
 import '../../domain/usecases/get_schools_usecase.dart';
 import 'schools_state.dart';
 import '../providers/school_providers.dart';
 
-// Провайдер для Notifier'а
 final schoolsNotifierProvider =
     StateNotifierProvider<SchoolsNotifier, SchoolsState>((ref) {
   return SchoolsNotifier(
     ref.watch(getSchoolsUseCaseProvider),
     ref.watch(addSchoolUseCaseProvider),
+    ref.watch(logActivityUseCaseProvider),
   );
 });
 
 class SchoolsNotifier extends StateNotifier<SchoolsState> {
   final GetSchoolsUseCase _getSchoolsUseCase;
   final AddSchoolUseCase _addSchoolUseCase;
+  final LogActivityUseCase _logActivityUseCase;
 
-  SchoolsNotifier(this._getSchoolsUseCase, this._addSchoolUseCase) : super(SchoolsInitial()) {
+  SchoolsNotifier(
+    this._getSchoolsUseCase, 
+    this._addSchoolUseCase,
+    this._logActivityUseCase,
+  ) : super(SchoolsInitial()) {
     getSchools();
   }
 
@@ -37,20 +45,23 @@ class SchoolsNotifier extends StateNotifier<SchoolsState> {
     required String address,
     required AppUser currentUser,
   }) async {
-    // Здесь мы не меняем состояние на Loading, т.к. список 
-    // обновится автоматически благодаря Stream.
-    // Но мы можем обработать результат, чтобы показать ошибку, если она будет.
     final params = AddSchoolParams(name: name, address: address, currentUser: currentUser);
     final result = await _addSchoolUseCase(params);
 
     result.fold(
       (failure) {
-        // Здесь можно передать ошибку в UI, например, через отдельный провайдер
         print("Ошибка добавления школы: ${failure.message}");
       },
       (_) {
-        // Успех
-        print("Школа успешно добавлена");
+        // --- ЛОГИРУЕМ АКТИВНОСТЬ: ДОБАВЛЕНИЕ ШКОЛЫ ---
+        _logActivityUseCase(ActivityLog(
+          id: '',
+          type: 'add_school',
+          title: 'Новый филиал',
+          description: 'Открыта новая школа "$name"',
+          userName: currentUser.fullName,
+          createdAt: DateTime.now(),
+        ));
       },
     );
   }
