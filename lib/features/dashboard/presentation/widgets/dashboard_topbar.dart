@@ -43,7 +43,7 @@ class DashboardTopBar extends ConsumerWidget implements PreferredSizeWidget {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(CupertinoIcons.search, color: textSecondary, size: 18),
+                        Icon(Icons.search_rounded, color: textSecondary, size: 18),
                         SizedBox(width: 12),
                         Flexible(
                           child: Text(
@@ -82,11 +82,11 @@ class DashboardTopBar extends ConsumerWidget implements PreferredSizeWidget {
               ],
               
               // Theme Toggle
-              const _IconButton(icon: CupertinoIcons.sun_max),
+              const _IconButton(icon: Icons.light_mode_outlined),
               const SizedBox(width: 12),
               
               // Notifications
-              const _IconButton(icon: CupertinoIcons.bell, hasBadge: true),
+              const _IconButton(icon: Icons.notifications_none_rounded, hasBadge: true),
               const SizedBox(width: 24),
               
               // User Profile

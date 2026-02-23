@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:rolab_crm/features/students/domain/entities/student.dart';
 import 'package:rolab_crm/features/students/presentation/notifiers/students_notifier.dart';
@@ -27,6 +27,16 @@ class SchoolDetailsPage extends ConsumerWidget {
               backgroundColor: bgColor,
               surfaceTintColor: Colors.transparent,
               stretch: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: textPrimary),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/schools');
+                  }
+                },
+              ),
               title: const Text(
                 'Студенты',
                 style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary),
@@ -41,7 +51,7 @@ class SchoolDetailsPage extends ConsumerWidget {
                         builder: (context) => AddStudentDialog(schoolId: schoolId),
                       );
                     },
-                    icon: const Icon(CupertinoIcons.add_circled_solid, size: 20, color: primaryColor),
+                    icon: const Icon(Icons.add_circle_rounded, size: 20, color: primaryColor),
                     label: const Text('Добавить', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: primaryColor)),
                   ),
                 )
@@ -55,7 +65,7 @@ class SchoolDetailsPage extends ConsumerWidget {
 
     return switch (studentsState) {
       StudentsLoading() || StudentsInitial() => buildScaffold([
-          const SliverFillRemaining(child: Center(child: CupertinoActivityIndicator(radius: 16))),
+          const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
         ]),
       StudentsError(message: final msg) => buildScaffold([
           SliverFillRemaining(
@@ -65,7 +75,7 @@ class SchoolDetailsPage extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(CupertinoIcons.exclamationmark_circle, size: 64, color: redColor),
+                    const Icon(Icons.error_outline_rounded, size: 64, color: redColor),
                     const SizedBox(height: 16),
                     const Text('Ошибка', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
                     const SizedBox(height: 8),
@@ -81,7 +91,7 @@ class SchoolDetailsPage extends ConsumerWidget {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
               return buildScaffold([
-                const SliverFillRemaining(child: Center(child: CupertinoActivityIndicator(radius: 16))),
+                const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
               ]);
             }
 
@@ -94,7 +104,7 @@ class SchoolDetailsPage extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(CupertinoIcons.wifi_exclamationmark, size: 64, color: redColor),
+                          const Icon(Icons.wifi_off_rounded, size: 64, color: redColor),
                           const SizedBox(height: 16),
                           const Text('Ошибка соединения', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
                           const SizedBox(height: 8),
@@ -120,7 +130,7 @@ class SchoolDetailsPage extends ConsumerWidget {
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
-                        Icon(CupertinoIcons.search, color: textSecondary, size: 18),
+                        Icon(Icons.search_rounded, color: textSecondary, size: 18),
                         SizedBox(width: 12),
                         Expanded(
                           child: Text('Поиск ученика...', style: TextStyle(color: textSecondary, fontSize: 16)),
@@ -140,7 +150,7 @@ class SchoolDetailsPage extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(CupertinoIcons.person_2_alt, size: 80, color: textSecondary),
+                        Icon(Icons.group_rounded, size: 80, color: textSecondary),
                         SizedBox(height: 16),
                         Text('Нет студентов', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: textPrimary)),
                         SizedBox(height: 8),
@@ -217,12 +227,12 @@ class _PremiumStudentCard extends StatelessWidget {
 
   Color _getAvatarColor(String name) {
     final colors = [
-      CupertinoColors.systemBlue,
-      CupertinoColors.systemOrange,
-      CupertinoColors.systemPink,
-      CupertinoColors.systemPurple,
-      CupertinoColors.systemTeal,
-      CupertinoColors.systemIndigo,
+      Colors.blue,
+      Colors.orange,
+      Colors.pink,
+      Colors.purple,
+      Colors.teal,
+      Colors.indigo,
     ];
     return colors[name.hashCode.abs() % colors.length];
   }
@@ -311,7 +321,7 @@ class _PremiumStudentCard extends StatelessWidget {
                     IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      icon: const Icon(CupertinoIcons.ellipsis_vertical, size: 20, color: textSecondary),
+                      icon: const Icon(Icons.more_vert_rounded, size: 20, color: textSecondary),
                       onPressed: () {},
                     )
                   ],
@@ -322,14 +332,14 @@ class _PremiumStudentCard extends StatelessWidget {
                 // --- ИНФОРМАЦИЯ: ДЕНЬ РОЖДЕНИЯ И ИИН ---
                 // Заменили бейджи на аккуратные строки с текстом
                 _InfoRow(
-                  icon: CupertinoIcons.gift_fill,
+                  icon: Icons.card_giftcard_rounded,
                   label: 'День рождения',
                   value: formattedDob,
                 ),
                 const SizedBox(height: 8),
                 if (student.iin?.isNotEmpty == true)
                   _InfoRow(
-                    icon: CupertinoIcons.doc_text_fill,
+                    icon: Icons.description_rounded,
                     label: 'ИИН',
                     value: student.iin!,
                   ),
@@ -351,7 +361,7 @@ class _PremiumStudentCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(color: cardColor, shape: BoxShape.circle),
-                        child: const Icon(CupertinoIcons.person_2_fill, size: 18, color: textSecondary),
+                        child: const Icon(Icons.person_rounded, size: 18, color: textSecondary),
                       ),
                       const SizedBox(width: 12),
                       
@@ -385,7 +395,7 @@ class _PremiumStudentCard extends StatelessWidget {
                             onTap: () {},
                             child: const Padding(
                               padding: EdgeInsets.all(8.0),
-                              child: Icon(CupertinoIcons.phone_fill, size: 18, color: greenColor),
+                              child: Icon(Icons.phone_rounded, size: 18, color: greenColor),
                             ),
                           ),
                         )

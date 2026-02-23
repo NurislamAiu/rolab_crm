@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dashboard_colors.dart';
 
@@ -39,8 +38,8 @@ class DashboardKpiCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    isUp ? CupertinoIcons.arrow_up_right : CupertinoIcons.arrow_down_right,
-                    size: 14,
+                    isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                    size: 16,
                     color: isUp ? greenColor : redColor,
                   ),
                   const SizedBox(width: 4),

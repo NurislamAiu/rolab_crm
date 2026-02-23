@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,47 +15,57 @@ class SchoolsDashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schoolsState = ref.watch(schoolsNotifierProvider);
 
-    Widget buildContent(List<Widget> slivers) {
+    Widget buildContent(Widget child) {
       return Container(
         color: bgColor,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           slivers: [
-            SliverAppBar.large(
-              backgroundColor: bgColor,
-              surfaceTintColor: Colors.transparent,
-              stretch: true,
-              title: const Text(
-                'Школы',
-                style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary),
+            SliverPadding(
+              padding: const EdgeInsets.all(32.0),
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Schools', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textPrimary)),
+                        SizedBox(height: 8),
+                        Text('Manage partner schools and locations', style: TextStyle(fontSize: 14, color: textSecondary)),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const AddEditSchoolDialog(),
+                        );
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add School'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    )
+                  ],
+                ),
               ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: TextButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const AddEditSchoolDialog(),
-                      );
-                    },
-                    icon: const Icon(CupertinoIcons.add_circled_solid, size: 20, color: primaryColor),
-                    label: const Text('Добавить', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: primaryColor)),
-                  ),
-                )
-              ],
             ),
-            ...slivers,
+            child,
           ],
         ),
       );
     }
 
     return switch (schoolsState) {
-      SchoolsInitial() || SchoolsLoading() => buildContent([
-          const SliverFillRemaining(child: Center(child: CupertinoActivityIndicator(radius: 16))),
-        ]),
-      SchoolsError(message: final msg) => buildContent([
+      SchoolsInitial() || SchoolsLoading() => buildContent(
+          const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
+        ),
+      SchoolsError(message: final msg) => buildContent(
           SliverFillRemaining(
             child: Center(
               child: Padding(
@@ -64,9 +73,9 @@ class SchoolsDashboardPage extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(CupertinoIcons.exclamationmark_circle, size: 64, color: redColor),
+                    const Icon(Icons.error_outline_rounded, size: 64, color: redColor),
                     const SizedBox(height: 16),
-                    const Text('Ошибка', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
+                    const Text('Error', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
                     const SizedBox(height: 8),
                     Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: textSecondary)),
                   ],
@@ -74,18 +83,18 @@ class SchoolsDashboardPage extends ConsumerWidget {
               ),
             ),
           ),
-        ]),
+        ),
       SchoolsStreamLoaded(schoolsStream: final stream) => StreamBuilder<List<School>>(
           stream: stream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-              return buildContent([
-                const SliverFillRemaining(child: Center(child: CupertinoActivityIndicator(radius: 16))),
-              ]);
+              return buildContent(
+                const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
+              );
             }
 
             if (snapshot.hasError) {
-              return buildContent([
+              return buildContent(
                 SliverFillRemaining(
                   child: Center(
                     child: Padding(
@@ -93,9 +102,9 @@ class SchoolsDashboardPage extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(CupertinoIcons.wifi_exclamationmark, size: 64, color: redColor),
+                          const Icon(Icons.wifi_off_rounded, size: 64, color: redColor),
                           const SizedBox(height: 16),
-                          const Text('Ошибка соединения', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
+                          const Text('Connection Error', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
                           const SizedBox(height: 8),
                           Text('${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: textSecondary)),
                         ],
@@ -103,223 +112,298 @@ class SchoolsDashboardPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-              ]);
+              );
             }
 
-            final searchBarSliver = SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF13151F),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        Icon(CupertinoIcons.search, color: textSecondary, size: 18),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text('Поиск школы...', style: TextStyle(color: textSecondary, fontSize: 16)),
+            final schools = snapshot.data ?? [];
+
+            return buildContent(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // KPIs
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _KpiCard(
+                              icon: Icons.business_rounded,
+                              value: schools.length.toString(),
+                              label: 'Total Schools',
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          const Expanded(
+                            child: _KpiCard(
+                              icon: Icons.people_alt_rounded,
+                              value: '1,847', // Mock total students
+                              label: 'Total Students',
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          const Expanded(
+                            child: _KpiCard(
+                              icon: Icons.location_on_rounded,
+                              value: '8', // Mock cities
+                              label: 'Cities Covered',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Search Bar
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: borderColor),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.search_rounded, color: textSecondary, size: 18),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Search schools...',
+                                style: TextStyle(color: textSecondary, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Table
+                      Container(
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  // Prevents "infinite width" errors by forcing a concrete minimum width
+                                  minWidth: constraints.maxWidth > 800 ? constraints.maxWidth : 800,
+                                ),
+                                child: IntrinsicWidth(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      // Table Header
+                                      Container(
+                                        color: const Color(0xFF13151F),
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                        child: Row(
+                                          children: const [
+                                            Expanded(flex: 3, child: Text('SCHOOL NAME', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5))),
+                                            Expanded(flex: 3, child: Text('LOCATION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5))),
+                                            Expanded(flex: 1, child: Text('STUDENTS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5))),
+                                            Expanded(flex: 1, child: Text('GROUPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5))),
+                                            Expanded(flex: 1, child: Text('STATUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5))),
+                                            Expanded(flex: 1, child: Text('ACTIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5))),
+                                          ],
+                                        ),
+                                      ),
+                                      const Divider(height: 1, color: borderColor),
+                                  
+                                      if (schools.isEmpty)
+                                        const Padding(
+                                          padding: EdgeInsets.all(32.0),
+                                          child: Center(
+                                            child: Text('No schools found', style: TextStyle(color: textSecondary)),
+                                          ),
+                                        )
+                                      else
+                                        // Table Rows
+                                        ...schools.map((school) => _SchoolTableRow(school: school)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
               ),
             );
-
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return buildContent([
-                searchBarSliver,
-                const SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(CupertinoIcons.building_2_fill, size: 80, color: textSecondary),
-                        SizedBox(height: 16),
-                        Text('Нет добавленных школ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: textPrimary)),
-                        SizedBox(height: 8),
-                        Text(
-                          'Нажмите «Добавить» в правом верхнем\nуглу, чтобы создать новую школу.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 15, color: textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ]);
-            }
-
-            final schools = snapshot.data!;
-            
-            return buildContent([
-              searchBarSliver,
-              SliverLayoutBuilder(
-                builder: (context, constraints) {
-                  int crossAxisCount = 1;
-                  if (constraints.crossAxisExtent >= 1100) {
-                    crossAxisCount = 3;
-                  } else if (constraints.crossAxisExtent >= 650) {
-                    crossAxisCount = 2;
-                  }
-
-                  if (crossAxisCount > 1) {
-                    return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          mainAxisExtent: 100, // Высота карточки школы в сетке
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => _PremiumSchoolCard(school: schools[index]),
-                          childCount: schools.length,
-                        ),
-                      ),
-                    );
-                  } else {
-                    return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _PremiumSchoolCard(school: schools[index]),
-                            );
-                          },
-                          childCount: schools.length,
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ]);
           },
         ),
     };
   }
 }
 
-// Премиум-карточка школы
-class _PremiumSchoolCard extends StatelessWidget {
+class _KpiCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _KpiCard({required this.icon, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: primaryColor, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textPrimary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 13, color: textSecondary),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SchoolTableRow extends StatelessWidget {
   final School school;
 
-  const _PremiumSchoolCard({required this.school});
-
-  // Генерация красивого градиента на основе названия школы
-  Color _getSchoolColor(String name) {
-    final colors = [
-      CupertinoColors.systemIndigo,
-      CupertinoColors.activeBlue,
-      CupertinoColors.systemPurple,
-      CupertinoColors.systemTeal,
-      CupertinoColors.systemPink,
-      CupertinoColors.systemOrange,
-    ];
-    return colors[name.hashCode.abs() % colors.length];
-  }
+  const _SchoolTableRow({required this.school});
 
   @override
   Widget build(BuildContext context) {
     final isNameEmpty = school.name.trim().isEmpty;
-    final name = isNameEmpty ? 'Без названия' : school.name;
-    final primaryAvatarColor = _getSchoolColor(name);
+    final name = isNameEmpty ? 'Unknown School' : school.name;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: 1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            // Переходим на страницу деталей школы (к списку студентов)
-            context.go('/schools/${school.id}');
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Иконка / Аватарка школы (Squircle)
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryAvatarColor.withOpacity(0.6), primaryAvatarColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          context.go('/schools/${school.id}');
+        },
+        hoverColor: Colors.white.withOpacity(0.02),
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: borderColor)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Row(
+            children: [
+              // School Name
+              Expanded(
+                flex: 3,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1F2232),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.business_rounded, color: textSecondary, size: 18),
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    isNameEmpty ? '?' : name.substring(0, 1).toUpperCase(),
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                
-                // Название и адрес
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
                         name,
-                        maxLines: 1,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 18, 
-                          fontWeight: FontWeight.w700, 
-                          color: textPrimary
-                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(CupertinoIcons.location_solid, size: 14, color: textSecondary),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              school.address.isNotEmpty ? school.address : 'Адрес не указан',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 14, 
-                                fontWeight: FontWeight.w500, 
-                                color: textSecondary
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+              // Location
+              Expanded(
+                flex: 3,
+                child: Text(
+                  school.address.isNotEmpty ? school.address : 'Not specified',
+                  style: const TextStyle(fontSize: 13, color: textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Students (Mock)
+              const Expanded(
+                flex: 1,
+                child: Text(
+                  '287',
+                  style: TextStyle(fontSize: 13, color: textSecondary),
+                ),
+              ),
+              // Groups (Mock)
+              const Expanded(
+                flex: 1,
+                child: Text(
+                  '12',
+                  style: TextStyle(fontSize: 13, color: textSecondary),
+                ),
+              ),
+              // Status
+              Expanded(
+                flex: 1,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: greenColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: greenColor.withOpacity(0.2)),
+                    ),
+                    child: const Text(
+                      'Active',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: greenColor),
+                    ),
                   ),
                 ),
-                
-                const SizedBox(width: 12),
-                
-                // Иконка стрелочки "вперед"
-                const Icon(CupertinoIcons.chevron_right, size: 20, color: textSecondary),
-              ],
-            ),
+              ),
+              // Actions
+              Expanded(
+                flex: 1,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => context.go('/schools/${school.id}'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 0),
+                      alignment: Alignment.centerLeft,
+                    ),
+                    child: const Text(
+                      'View Details',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rolab_crm/core/config/router/routes.dart';
@@ -33,10 +32,10 @@ class DashboardQuickActionsSection extends StatelessWidget {
               mainAxisSpacing: 16,
               childAspectRatio: isDesktop ? 4 : 3.5,
               children: [
-                _QuickActionBtn(icon: CupertinoIcons.building_2_fill, title: 'Добавить школу', onTap: () => context.go(AppRoutes.schools)),
-                _QuickActionBtn(icon: CupertinoIcons.person_2_fill, title: 'Добавить группу', onTap: () {}),
-                _QuickActionBtn(icon: CupertinoIcons.person_add_solid, title: 'Добавить ученика', onTap: () {}),
-                _QuickActionBtn(icon: CupertinoIcons.money_dollar, title: 'Отметить платеж', onTap: () {}),
+                _QuickActionBtn(icon: Icons.business_rounded, title: 'Добавить школу', onTap: () => context.go(AppRoutes.schools)),
+                _QuickActionBtn(icon: Icons.group_add_rounded, title: 'Добавить группу', onTap: () {}),
+                _QuickActionBtn(icon: Icons.person_add_rounded, title: 'Добавить ученика', onTap: () {}),
+                _QuickActionBtn(icon: Icons.payments_rounded, title: 'Отметить платеж', onTap: () {}),
               ],
             );
           }),

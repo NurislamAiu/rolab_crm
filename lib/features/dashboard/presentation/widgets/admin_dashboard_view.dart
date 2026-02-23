@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rolab_crm/features/dashboard/presentation/notifiers/dashboard_notifier.dart';
@@ -38,12 +37,12 @@ class AdminDashboardView extends ConsumerWidget {
       {'student': 'Isabella Rodriguez', 'amount': '\$225', 'dueDate': 'Feb 17, 2026', 'daysOverdue': 6},
     ];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 800;
-          return Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth > 800;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
@@ -104,9 +103,9 @@ class AdminDashboardView extends ConsumerWidget {
               const DashboardQuickActionsSection(),
               const SizedBox(height: 32),
             ],
-          );
-        }
-      ),
+          ),
+        );
+      }
     );
   }
 
@@ -119,10 +118,10 @@ class AdminDashboardView extends ConsumerWidget {
     }
 
     final cards = [
-      DashboardKpiCard(title: 'Всего школ', value: schools, change: '+12%', isUp: true, icon: CupertinoIcons.building_2_fill),
-      DashboardKpiCard(title: 'Активные ученики', value: students, change: '+23%', isUp: true, icon: CupertinoIcons.person_2_fill),
-      const DashboardKpiCard(title: 'Месячный доход', value: '\$127,450', change: '+18%', isUp: true, icon: CupertinoIcons.money_dollar),
-      const DashboardKpiCard(title: 'Неоплаченные', value: '43', change: '-8%', isUp: false, icon: CupertinoIcons.exclamationmark_circle),
+      DashboardKpiCard(title: 'Всего школ', value: schools, change: '+12%', isUp: true, icon: Icons.business_rounded),
+      DashboardKpiCard(title: 'Активные ученики', value: students, change: '+23%', isUp: true, icon: Icons.people_alt_rounded),
+      const DashboardKpiCard(title: 'Месячный доход', value: '\$127,450', change: '+18%', isUp: true, icon: Icons.monetization_on_rounded),
+      const DashboardKpiCard(title: 'Неоплаченные', value: '43', change: '-8%', isUp: false, icon: Icons.error_outline_rounded),
     ];
 
     if (isDesktop) {
